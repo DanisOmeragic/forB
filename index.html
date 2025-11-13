@@ -23,23 +23,7 @@
   /* Heart background container */
   .heart-bg { 
     position: absolute; inset:0; 
-    z-index:0; pointer-events:none; 
-  }
-
-  /* Individual hearts */
-  .heart-bg span {
-    position:absolute;
-    color: rgba(255,255,255,0.2);
-    font-size: 1rem;
-    animation: floatUp linear infinite;
-    user-select:none;
-  }
-  .heart-bg span:nth-child(odd){ color: rgba(255,255,255,0.15); }
-  .heart-bg span:nth-child(even){ color: rgba(255,255,255,0.25); }
-
-  @keyframes floatUp {
-    0% { transform: translateY(100vh); }
-    100% { transform: translateY(-200vh); }
+    z-index:0; pointer-events:none; /* behind everything */
   }
 
   /* Heart screen */
@@ -47,7 +31,6 @@
     position: absolute; inset:0; display:flex; align-items:center; justify-content:center;
     transition: transform 1s cubic-bezier(0.77,0,0.175,1);
     z-index:2;
-    background: transparent;
   }
 
   .heart-screen-bg {
@@ -66,21 +49,29 @@
   .note-screen {
     position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
     justify-content:flex-start; overflow-y:auto; -webkit-overflow-scrolling:touch;
-    padding:2rem 1rem; z-index:1;
-    background-color: rgba(255,227,239,0.95);
+    padding:1.5rem 1rem; z-index:1; 
+    background-color: rgba(250, 174, 207, 0.85); /* slightly transparent to see hearts */
+  }
+
+  /* Wrap iframe + note tightly */
+  .note-container {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:0; /* no spacing */
+    width:100%;
   }
 
   .note-image {
-    max-width:90%; height:auto; border-radius:12px; box-shadow:0 0 20px rgba(0,0,0,0.2); position:relative;
-    margin-top:1rem;
+    max-width:90%; height:auto; border-radius:12px; box-shadow:0 0 20px rgba(0,0,0,0.2);
+    display:block;
   }
 
-  /* Spotify embed styling */
   .music-embed {
     width:90%;
     max-width:600px;
     border-radius:12px;
-    margin-bottom:1rem;
+    display:block;
   }
 
   /* Decorative top & bottom for note */
@@ -89,14 +80,15 @@
     content: "❤❤❤❤❤";
     display:block; text-align:center; font-size:1.2rem; color: rgba(255,105,180,0.5); letter-spacing:0.2rem;
   }
-  .note-image::before { margin-bottom:0.5rem; }
-  .note-image::after { margin-top:0.5rem; }
+  .note-image::before { margin-bottom:0.2rem; }
+  .note-image::after { margin-top:0.2rem; }
 
   @media(max-width:430px){
     .heart{font-size:6rem;}
-    .note-screen{padding:1.5rem;}
+    .note-screen{padding:1rem;}
     .music-embed{width:95%;}
   }
+
 </style>
 </head>
 <body>
@@ -112,9 +104,10 @@
 
   <!-- note + music -->
   <div class="note-screen" id="noteScreen">
-    <iframe class="music-embed" data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/0NrucXAEaaZB48N2vIDrjT?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-
-    <img src="note.png" alt="Your handwritten note" class="note-image">
+    <div class="note-container">
+      <iframe class="music-embed" data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/0NrucXAEaaZB48N2vIDrjT?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+      <img src="note.png" alt="Your handwritten note" class="note-image">
+    </div>
   </div>
 </div>
 
@@ -126,19 +119,29 @@
     heartScreen.classList.add('slide-away');
   });
 
-  // dynamically generate hearts
   const heartBg = document.getElementById('heartBg');
-  const colors = ['rgba(255,255,255,0.15)','rgba(255,255,255,0.2)','rgba(255,255,255,0.25)'];
 
-  for(let i=0;i<100;i++){ // 100 hearts
+  // Function to create a single heart
+  function createHeart() {
     const span = document.createElement('span');
     span.textContent = '♡';
-    span.style.left = Math.random()*100+'vw';
-    span.style.fontSize = (Math.random()*1.5 + 0.8)+'rem';
-    span.style.animationDuration = (Math.random()*20 + 25)+'s';
-    span.style.color = colors[Math.floor(Math.random()*colors.length)];
+    span.style.position = 'absolute';
+    span.style.left = Math.random() * 100 + 'vw';
+    span.style.fontSize = (Math.random()*1.5 + 1.8) + 'rem';
+    span.style.color = 'white';
+    span.style.textShadow = '0 0 5px rgba(255,255,255,0.8)';
+    span.style.animation = `floatUp ${Math.random()*10 + 15}s linear forwards`;
     heartBg.appendChild(span);
+    // Remove after 25s
+    setTimeout(() => { heartBg.removeChild(span); }, 15000);
   }
+
+  // Keyframes injection for JS-created hearts
+  const styleSheet = document.styleSheets[0];
+  styleSheet.insertRule(`@keyframes floatUp { 0% { transform: translateY(100vh); } 100% { transform: translateY(-15vh); } }`, styleSheet.cssRules.length);
+
+  // Spawn a heart every 300ms
+  setInterval(createHeart, 300);
 </script>
 </body>
 </html>
